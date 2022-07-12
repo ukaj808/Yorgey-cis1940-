@@ -26,36 +26,29 @@ getAllTriples _ = []
 localMaxima :: [Integer] -> [Integer]
 localMaxima xs = snd' (unzip3 (filter hasMaxima (getAllTriples xs)))
 
+type RowNumber = Integer
+type HistogramInput = [Integer]
+type Row = String
+
 countOccur :: Eq a => [a] -> a -> Integer
 countOccur [] _ = 0
 countOccur (x:xs) y = if y == x
                       then (countOccur xs y) + 1
                       else countOccur xs y
 
-mapStar :: Integer -> Row -> Char
-mapStar numOccurs row = if numOccurs >= row then '*' else ' '
+plot :: Integer -> RowNumber -> Char
+plot numOccurs row = if numOccurs >= row then '*' else ' '
 
-type Row = Integer
-type HistogramInput = [Integer]
+mapRow :: HistogramInput -> RowNumber -> Row
+mapRow _ (-1)     = "0123456789"
+mapRow _ 0        = "==========\n"
+mapRow [] _       = "          "
+mapRow input row  =
+    [plot (countOccur input i) row | i <- [0..9]] ++ "\n" 
 
-rowMap :: HistogramInput -> Row -> String
-rowMap _ (-1)     = "0123456789"
-rowMap _ 0        = "==========\n"
-rowMap [] _       = "          "
-rowMap input row  =
-    mapStar (countOccur input 0) row :
-    mapStar (countOccur input 1) row :
-    mapStar (countOccur input 2) row :
-    mapStar (countOccur input 3) row :
-    mapStar (countOccur input 4) row :
-    mapStar (countOccur input 5) row :
-    mapStar (countOccur input 6) row :
-    mapStar (countOccur input 7) row :
-    mapStar (countOccur input 8) row :
-    mapStar (countOccur input 9) row :
-    ['\n']
-
-histogram :: [Integer] -> String 
+histogram :: HistogramInput -> String 
 histogram input =
-    concat $ zipWith rowMap (repeat input) [maxOccur, maxOccur - 1..(-1)]
-    where maxOccur = maximum (map (countOccur input) [0..9]) 
+    concat $ rows 
+        where rows = zipWith mapRow (repeat input) countdown   
+              countdown = [maxOccur, maxOccur - 1..(-1)]
+              maxOccur = maximum (map (countOccur input) [0..9])
