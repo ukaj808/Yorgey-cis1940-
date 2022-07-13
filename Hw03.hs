@@ -29,6 +29,7 @@ localMaxima xs = snd' (unzip3 (filter hasMaxima (getAllTriples xs)))
 type RowNumber = Integer
 type HistogramInput = [Integer]
 type Row = String
+type Histogram = String
 
 countOccur :: Eq a => [a] -> a -> Integer
 countOccur [] _ = 0
@@ -46,7 +47,7 @@ mapRow [] _       = "          "
 mapRow input row  =
     [plot (countOccur input i) row | i <- [0..9]] ++ "\n" 
 
-histogram :: HistogramInput -> String 
+histogram :: HistogramInput -> Histogram 
 histogram input =
     concat $ rows 
         where rows = zipWith mapRow (repeat input) countdown   
