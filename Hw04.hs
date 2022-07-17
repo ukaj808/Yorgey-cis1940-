@@ -18,4 +18,36 @@ fun2' :: Integer -> Integer
 fun2' = sum . filter even . takeWhile (>1) . iterate g
     where g = (\x -> if even x then x `div` 2 else 3 * x + 1)
 
+data Tree a = Leaf
+            | Node Integer (Tree a) a (Tree a)
+            deriving (Show, Eq)
 
+height :: Tree a -> Integer
+height Leaf = (-1)
+height (Node h _ _ _) = h
+
+leftTree :: Tree a -> Tree a
+leftTree (Node h lt x rt) = lt
+
+foldTree' :: [a] -> Tree a
+foldTree' [] = Leaf
+foldTree' [x] = Node 0 Leaf x Leaf
+foldTree' (x:xs) = Node height (foldTree' lt) x (foldTree' rt)
+    where lt = fst split
+          rt = snd split
+          split = splitAt n xs 
+          n = (length xs) `div` 2
+          height = ceiling $ log $ fromIntegral $ length (x:xs)
+
+-- recursion with fold?
+foldTree :: [a] -> Tree a
+foldTree = foldr insert Leaf
+
+insert :: a -> Tree a -> Tree a
+insert x Leaf = Node 0 Leaf x Leaf
+insert x (Node h lt y rt)
+  | height lt < height rt =  Node h (insert x lt) y rt
+  | height lt > height rt = Node h lt y (insert x rt)
+  | otherwise = Node ((height tree + 1)) (insert x lt) y rt
+  
+      where tree = (insert x lt)
