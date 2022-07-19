@@ -58,11 +58,11 @@ xor = foldr (\x acc -> x /= acc) False
 map' :: (a -> b) -> [a] -> [b]
 map' f = foldr (\x acc -> f x : acc) []
 
---sieveSundaram :: Integer -> [Integer]
+sieveSundaram :: Integer -> [Integer]
 sieveSundaram = filter isOddPrime . genTo . (+2) . (*2)
 
-    where genTo n = [1..n] 
+    where genTo n = [2..n-1] 
           isOddPrime n = odd n && 
               (foldr (\x acc -> if acc == False 
                                 then False
-                                else x `mod` n /= 0) True [2..n]) 
+                                else n `mod` x /= 0) True [2..n-1]) 
