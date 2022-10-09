@@ -25,7 +25,7 @@ streamToList :: Stream a -> [a]
 streamToList (Cons x (xs)) = x : streamToList xs
 
 listToStream :: [a] -> Stream a
-listToStream (x:xs) = Cons x (listToStream xs)
+listToStream (x : xs) = Cons x (listToStream xs)
 
 streamRepeat :: a -> Stream a
 streamRepeat x = Cons x (streamRepeat x)
@@ -34,13 +34,20 @@ streamMap :: (a -> b) -> Stream a -> Stream b
 streamMap f (Cons x (xs)) = Cons (f x) (streamMap f xs)
 
 streamFromSeed :: (a -> a) -> a -> Stream a
-streamFromSeed f x = Cons y (streamFromSeed f y)
-  where
-    y = f x
+streamFromSeed f x = Cons x (streamFromSeed f x)
 
 nats :: Stream Integer
-nats = listToStream [0..] 
+nats = listToStream [0 ..]
+
+rule :: Integer -> Integer
+rule 0 = 0
+rule x = if x `mod` 2 == 0 then 1 + rule (x `div` 2) else 0 
+
+ruler :: Stream Integer
+ruler = listToStream [rule x | x <- [0 ..]] 
 
 instance Show a => Show (Stream a) where
-  show (Cons x (xs)) = take 20 ("Cons x " ++ (show xs))
-
+  show (Cons x (xs)) = take 1000 $ (outter x) ++ (inner xs)
+    where
+      outter x = "Cons " ++ show x
+      inner xs = ("(" ++ show xs ++ ")")
