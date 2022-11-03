@@ -21,4 +21,14 @@ tag (Append m jl1 jl2) = m
 (+++) jl1 jl2 = Append (tag jl1 `mappend` tag jl2) jl1 jl2
 
 indexJ :: (Sized b, Monoid b) => Int -> JoinList b a -> Maybe a
-indexJ = undefined
+indexJ _ Empty = Nothing
+indexJ i jl
+  | i < 0 = Nothing
+  | i == 0 =
+    case jl of
+      Single m a -> Just a
+      Append m jlx jly -> Nothing
+  | otherwise =
+    case jl of
+      Single m a -> undefined
+      Append m jlx jly -> undefined
