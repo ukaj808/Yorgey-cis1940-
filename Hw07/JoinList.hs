@@ -27,28 +27,32 @@ indexJ i jl
   | i >= rootValue = Nothing
   where
     rootValue = getSize (size (tag jl))
+
 indexJ i (Single m a) =
   if i == 0
     then Just a
     else Nothing
+
 indexJ i (Append m jl1 jl2) =
   if i < ltSize
-    then indexJ i jl1
+    then case jl1 of Empty -> indexJ (i - ltSize) jl2
+                     _ -> indexJ i jl1
     else indexJ (i - ltSize) jl2
   where
-    ltSize = getSize (size (tag jl1))
+    ltSize = case jl1 of Empty -> 0 
+                         _ -> getSize (size (tag jl1))
 
 test =
   Append
-    (Size 10)
+    (Size 7)
     (Append
-       (Size 8)
+       (Size 6)
        (Append
-          (Size 4)
-          (Append (Size 2) (Single (Size 1) 'y') (Single (Size 1) 'e'))
-          (Append (Size 2) (Single (Size 1) 'a') (Single (Size 1) 'h')))
+          (Size 2)
+          (Append (Size 1) Empty (Single (Size 1) 'e'))
+          (Append (Size 1) (Single (Size 1) 'a') Empty))
        (Append
           (Size 4)
           (Append (Size 2) (Single (Size 1) ' ') (Single (Size 1) 'b'))
           (Append (Size 2) (Single (Size 1) 'u') (Single (Size 1) 'd'))))
-    (Append (Size 2) (Single (Size 1) 'd') (Single (Size 1) 'y'))
+    (Append (Size 1) (Single (Size 1) 'd') Empty)
