@@ -46,7 +46,9 @@ indexJ i (Append m jl1 jl2) =
 
 dropJ :: (Sized b, Monoid b) => Int -> JoinList b a -> JoinList b a
 dropJ i jl | i <= 0 = jl
-           | i >= joinListSize jl = jl
+           | i >= joinListSize jl = Empty
+dropJ i Empty = Empty
+dropJ i (Append m jl1 jl2) = undefined
 
 test =
   Append
