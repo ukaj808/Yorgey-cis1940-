@@ -20,6 +20,11 @@ tag (Append m jl1 jl2) = m
 (+++) x@(Append m jl1 jl2) Empty = Append m x Empty
 (+++) jl1 jl2 = Append (tag jl1 `mappend` tag jl2) jl1 jl2
 
+joinListSize :: (Sized m, Monoid m) => JoinList m a -> Int
+joinListSize Empty = 0
+joinListSize (Single m a) = getSize (size m)
+joinListSize (Append m jl1 jl2) = getSize (size m)
+
 indexJ :: (Sized b, Monoid b) => Int -> JoinList b a -> Maybe a
 indexJ _ Empty = Nothing
 indexJ i jl
@@ -34,13 +39,14 @@ indexJ i (Single m a) =
     else Nothing
 
 indexJ i (Append m jl1 jl2) =
-  if i < ltSize
-    then case jl1 of Empty -> indexJ (i - ltSize) jl2
+  if i < joinListSize jl1
+    then case jl1 of Empty -> indexJ (i - joinListSize jl1) jl2
                      _ -> indexJ i jl1
-    else indexJ (i - ltSize) jl2
-  where
-    ltSize = case jl1 of Empty -> 0 
-                         _ -> getSize (size (tag jl1))
+    else indexJ (i - joinListSize jl1) jl2
+
+dropJ :: (Sized b, Monoid b) => Int -> JoinList b a -> JoinList b a
+dropJ i jl | i <= 0 = jl
+           | i >= joinListSize jl = jl
 
 test =
   Append
