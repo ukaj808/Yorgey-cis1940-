@@ -44,6 +44,11 @@ indexJ i (Append m jl1 jl2) =
                      _ -> indexJ i jl1
     else indexJ (i - joinListSize jl1) jl2
 
+joinListFold :: b -> (b -> a -> b -> b) -> JoinList m a -> b
+joinListFold e _ Empty = e 
+joinListFold e f (Single m a) = undefined
+joinListFold e f (Append m jl1 jl2) = undefined 
+
 dropJ :: (Sized b, Monoid b) => Int -> JoinList b a -> JoinList b a
 dropJ i jl | i <= 0 = jl
            | i >= joinListSize jl = Empty
