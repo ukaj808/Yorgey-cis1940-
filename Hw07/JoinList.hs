@@ -54,10 +54,11 @@ dropJ :: (Sized b, Monoid b) => Int -> JoinList b a -> JoinList b a
 dropJ i jl | i <= 0 = jl
            | i >= joinListSize jl = Empty
 dropJ i Empty = Empty
-dropJ i (Append m jl1 jl2) | joinListSize jl1 == i = Append (tag Empty `mappend` tag jl2) Empty jl2
-                           | joinListSize jl1 < i = Append (tag Empty `mappend` jl2'm) Empty jl2'
-                           | joinListSize jl1 > i = Append (jl1'm `mappend` jl2'm) jl1' jl2
-                                where jl1' = dropJ i jl1
+dropJ i (Append m jl1 jl2) |  i == jl1Size = Append (tag Empty `mappend` tag jl2) Empty jl2
+                           |  i > jl1Size = Append (tag Empty `mappend` jl2'm) Empty jl2'
+                           |  i < jl1Size = Append (jl1'm `mappend` jl2'm) jl1' jl2
+                                where jl1Size = joinListSize jl1
+                                      jl1' = dropJ i jl1
                                       jl2' = dropJ (i - joinListSize jl1) jl2
                                       jl1'm = tag jl1'
                                       jl2'm = tag jl2'
