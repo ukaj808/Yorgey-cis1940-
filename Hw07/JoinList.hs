@@ -1,5 +1,6 @@
 module Hw07 where
 
+import Scrabble
 import Sized
 
 data JoinList m a
@@ -19,7 +20,7 @@ tag (Append m jl1 jl2) = m
 (+++) x@(Single m a) empty = Append m x Empty
 (+++) Empty x@(Append m jl1 jl2) = Append m Empty x
 (+++) x@(Append m jl1 jl2) Empty = Append m x Empty
-(+++) jl1 jl2 = Append (tag jl1 `mappend` tag jl2) jl1 jl2
+(+++) jl1 jl2 = Append (tag jl1 <> tag jl2) jl1 jl2
 
 joinListSize :: (Sized m, Monoid m) => JoinList m a -> Int
 joinListSize Empty = 0
@@ -55,9 +56,9 @@ dropJ i jl
   | i >= joinListSize jl = Empty
 dropJ _ Empty = Empty
 dropJ i (Append m jl1 jl2)
-  | i == jl1Size = Append (tag Empty `mappend` tag jl2) Empty jl2
-  | i > jl1Size = Append (tag Empty `mappend` jl2'm) Empty jl2'
-  | i < jl1Size = Append (jl1'm `mappend` jl2'm) jl1' jl2
+  | i == jl1Size = Append (tag Empty <> tag jl2) Empty jl2
+  | i > jl1Size = Append (tag Empty <> jl2'm) Empty jl2'
+  | i < jl1Size = Append (jl1'm <> jl2'm) jl1' jl2
   where
     jl1Size = joinListSize jl1
     jl1' = dropJ i jl1
@@ -71,9 +72,9 @@ takeJ i jl
   | i >= joinListSize jl = jl
 takeJ _ Empty = Empty
 takeJ i (Append m jl1 jl2)
-  | i == jl1Size = Append (tag jl1 `mappend` tag Empty) jl1 Empty
-  | i < jl1Size = Append (jl1'm `mappend` tag Empty) jl1' Empty
-  | i > jl1Size = Append (tag jl1 `mappend` jl2'm) jl1 jl2'
+  | i == jl1Size = Append (tag jl1 <> tag Empty) jl1 Empty
+  | i < jl1Size = Append (jl1'm <> tag Empty) jl1' Empty
+  | i > jl1Size = Append (tag jl1 <> jl2'm) jl1 jl2'
   where
     jl1Size = joinListSize jl1
     jl1' = takeJ i jl1
@@ -85,6 +86,9 @@ jlToList :: JoinList m a -> [a]
 jlToList Empty = []
 jlToList (Single _ a) = [a]
 jlToList (Append _ l1 l2) = jlToList l1 ++ jlToList l2
+
+scoreLine :: String -> JoinList Score String
+scoreLine = undefined
 
 test1 =
   Append
