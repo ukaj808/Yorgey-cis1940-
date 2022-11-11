@@ -17,7 +17,7 @@ tag (Append m jl1 jl2) = m
 (+++) :: Monoid m => JoinList m a -> JoinList m a -> JoinList m a
 (+++) Empty Empty = Empty
 (+++) Empty x@(Single m a) = Append m Empty x
-(+++) x@(Single m a) empty = Append m x Empty
+(+++) x@(Single m a) Empty = Append m x Empty
 (+++) Empty x@(Append m jl1 jl2) = Append m Empty x
 (+++) x@(Append m jl1 jl2) Empty = Append m x Empty
 (+++) jl1 jl2 = Append (tag jl1 <> tag jl2) jl1 jl2
@@ -44,11 +44,6 @@ indexJ i (Append m jl1 jl2) =
            Empty -> indexJ (i - joinListSize jl1) jl2
            _ -> indexJ i jl1
     else indexJ (i - joinListSize jl1) jl2
-
-joinListFold :: b -> (b -> a -> b -> b) -> JoinList m a -> b
-joinListFold e _ Empty = e
-joinListFold e f (Single m a) = undefined
-joinListFold e f (Append m jl1 jl2) = undefined
 
 dropJ :: (Sized b, Monoid b) => Int -> JoinList b a -> JoinList b a
 dropJ i jl
@@ -88,7 +83,8 @@ jlToList (Single _ a) = [a]
 jlToList (Append _ l1 l2) = jlToList l1 ++ jlToList l2
 
 scoreLine :: String -> JoinList Score String
-scoreLine = undefined
+scoreLine [] = Empty
+scoreLine xs = Single (scoreString xs) xs
 
 test1 =
   Append
