@@ -1,5 +1,6 @@
 module Hw07 where
 
+import Buffer
 import Scrabble
 import Sized
 
@@ -8,6 +9,17 @@ data JoinList m a
   | Single m a
   | Append m (JoinList m a) (JoinList m a)
   deriving (Eq, Show)
+
+instance Buffer (JoinList (Score, Size) String) where
+  toString Empty = ""
+  toString (Single m a) = a
+  toString (Append m jl1 jl2) = toString jl1 ++ toString jl2
+  fromString [] = Empty
+  fromString xs = undefined
+  line = undefined
+  replaceLine = undefined
+  numLines = undefined
+  value = undefined
 
 tag :: Monoid m => JoinList m a -> m
 tag Empty = mempty
