@@ -15,8 +15,8 @@ instance Buffer (JoinList (Score, Size) String) where
   toString (Single m a) = a
   toString (Append m jl1 jl2) = toString jl1 ++ toString jl2
   fromString [] = Empty
-  fromString xs = undefined
-  line = undefined
+  fromString xs = Single (scoreString xs, Size (length (words xs))) xs
+  line i jl = undefined
   replaceLine = undefined
   numLines = undefined
   value = undefined
