@@ -10,6 +10,9 @@ instance Semigroup Score where
 instance Monoid Score where
   mempty = Score 0
 
+getScore :: Score -> Int
+getScore (Score i) = i
+
 score :: Char -> Score
 score 'a' = Score 1
 score 'A' = Score 1

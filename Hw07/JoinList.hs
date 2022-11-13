@@ -1,4 +1,4 @@
-module Hw07 where
+module JoinList where
 
 import Buffer
 import Scrabble
@@ -12,14 +12,23 @@ data JoinList m a
 
 instance Buffer (JoinList (Score, Size) String) where
   toString Empty = ""
-  toString (Single m a) = a
+  toString (Single m a) = a ++ ['\n']
   toString (Append m jl1 jl2) = toString jl1 ++ toString jl2
-  fromString [] = Empty
-  fromString xs = Single (scoreString xs, Size (length (words xs))) xs
-  line i jl = undefined
-  replaceLine = undefined
-  numLines = undefined
-  value = undefined
+  fromString xs =
+    foldl
+      (\jl line -> jl +++ Single (scoreString line, Size 1) line)
+      Empty
+      (lines xs)
+  line = indexJ
+  replaceLine _ _ Empty = Empty
+  replaceLine i _ jl
+    | i <= 0 = jl
+    | i > getSize (snd (tag jl)) = jl
+  replaceLine i newLine jl =
+    (takeJ (i - 1) jl +++ Single (scoreString newLine, Size 1) newLine) +++
+    dropJ i jl
+  numLines = getSize . snd . tag
+  value = getScore . fst . tag
 
 tag :: Monoid m => JoinList m a -> m
 tag Empty = mempty
