@@ -22,11 +22,11 @@ instance Buffer (JoinList (Score, Size) String) where
   line = indexJ
   replaceLine _ _ Empty = Empty
   replaceLine i _ jl
-    | i <= 0 = jl
+    | i < 0 = jl
     | i > getSize (snd (tag jl)) = jl
   replaceLine i newLine jl =
-    (takeJ (i - 1) jl +++ Single (scoreString newLine, Size 1) newLine) +++
-    dropJ i jl
+    (takeJ i jl +++ Single (scoreString newLine, Size 1) newLine) +++
+    dropJ (i + 1) jl
   numLines = getSize . snd . tag
   value = getScore . fst . tag
 
