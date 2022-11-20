@@ -1,6 +1,7 @@
 module Party where
 
 import Employee (Employee, GuestList(GL), empFun)
+import qualified Data.Tree as T
 
 
 instance Semigroup GuestList where
@@ -16,3 +17,5 @@ moreFun :: GuestList -> GuestList -> GuestList
 moreFun gl1@(GL _ fun1) gl2@(GL _ fun2) = if fun1 > fun2 then gl1 else gl2
 
 
+treeFold :: (b -> a -> b) -> T.Tree a -> b
+treeFold = undefined
