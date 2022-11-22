@@ -13,11 +13,17 @@ instance Monoid GuestList where
 glCons :: Employee -> GuestList -> GuestList
 glCons emp (GL emps fun) = GL (emp : emps) (empFun emp + fun)
 
+glConsBoss :: Employee -> GuestList -> GuestList
+glConsBoss boss (GL emps fun) = GL (boss : emps) (empFun boss)
+
 moreFun :: GuestList -> GuestList -> GuestList
 moreFun gl1@(GL _ fun1) gl2@(GL _ fun2) =
   if fun1 > fun2
     then gl1
     else gl2
+
+combineGls :: GuestList -> GuestList -> GuestList
+combineGls (GL emps fun) (GL emps' fun') = GL (emps ++ emps') (fun + fun')
 
 -- 1. takes a tree as input
 -- 2. folds the subforest of the given tree
@@ -56,4 +62,11 @@ flatten' :: T.Tree a -> [a]
 flatten' tr = treeFold' flatten' (++) [T.rootLabel tr] tr
 
 nextLevel :: Employee -> [(GuestList, GuestList)] -> (GuestList, GuestList)
-nextLevel = undefined
+nextLevel boss gls = (wBoss, woBoss)
+  where
+    wBoss =
+      foldr
+        (\(gl1, gl2) acc -> combineGls (moreFun gl1 gl2) acc)
+        (GL [boss] (empFun boss))
+        gls
+    woBoss = foldr (\(gl1, _) acc -> combineGls acc gl1) (GL [] 0) gls
