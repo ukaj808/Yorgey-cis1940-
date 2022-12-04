@@ -1,7 +1,18 @@
 module Party where
 
+import Data.List (sort)
 import qualified Data.Tree as T
-import Employee (Employee, GuestList(GL), empFun)
+import Data.Tuple (swap)
+import Employee
+  ( Employee(Emp)
+  , GuestList(GL)
+  , empFun
+  , empName
+  , testCompany
+  , testCompany2
+  , testCompany3
+  )
+import System.IO (IO)
 import Text.XHtml (input, treeColors)
 
 instance Semigroup GuestList where
@@ -61,12 +72,66 @@ flatten tr = foldr (\x y -> y ++ flatten x) [T.rootLabel tr] (T.subForest tr)
 flatten' :: T.Tree a -> [a]
 flatten' tr = treeFold' flatten' (++) [T.rootLabel tr] tr
 
+-- my solution
 nextLevel :: Employee -> [(GuestList, GuestList)] -> (GuestList, GuestList)
-nextLevel boss gls = (wBoss, woBoss)
+nextLevel boss [] = (glCons boss mempty, mempty)
+nextLevel boss glts = swap ((mempty, glCons boss mempty) <> mconcat glts)
+
+-- solution found online
+nextLevel' :: Employee -> [(GuestList, GuestList)] -> (GuestList, GuestList)
+nextLevel' emp gls = (glCons emp secondBest, firstBest)
   where
-    wBoss =
-      foldr
-        (\(gl1, gl2) acc -> combineGls (moreFun gl1 gl2) acc)
-        (GL [boss] (empFun boss))
-        gls
-    woBoss = foldr (\(gl1, _) acc -> combineGls acc gl1) (GL [] 0) gls
+    firstBest = mconcat . map fst $ gls
+    secondBest = mconcat . map snd $ gls
+
+considerBoss :: Employee -> [(GuestList, GuestList)] -> (GuestList, GuestList)
+considerBoss e gls = (glCons e bestWith, bestWithout)
+  where
+    bestWith = mconcat (map snd gls)
+    bestWithout = mconcat (map (uncurry moreFun) gls)
+
+-- Yorgeys solution
+nextLevel'' :: Employee -> [(GuestList, GuestList)] -> (GuestList, GuestList)
+nextLevel'' = considerBoss
+
+pickBetterGuestList :: (GuestList, GuestList) -> GuestList
+pickBetterGuestList = uncurry moreFun
+
+maxFunPair :: T.Tree Employee -> (GuestList, GuestList)
+maxFunPair (T.Node emp []) = (glCons emp mempty, mempty)
+maxFunPair (T.Node emp subtrees) = nextLevel emp (map maxFunPair subtrees)
+
+-- https://github.com/sarabander/cis194/blob/master/08/Party.hs (solution for maxFun found here.)
+maxFun :: T.Tree Employee -> GuestList
+maxFun = pickBetterGuestList . maxFunPair
+
+totalFunLn :: GuestList -> String
+totalFunLn (GL _ fun) = "Total fun: " ++ show fun
+
+employeeNameLn :: Employee -> String
+employeeNameLn emp = empName emp
+
+getEmployees :: GuestList -> [Employee]
+getEmployees (GL emps fun) = emps
+
+instance Ord Employee where
+  compare x y = compare (empName x) (empName y)
+  (<) x y = (<) (empName x) (empName y)
+  (<=) x y = (<=) (empName x) (empName y)
+  (>) x y = (>) (empName x) (empName y)
+  (>=) x y = (>=) (empName x) (empName y)
+
+sortByFirstName :: GuestList -> GuestList
+sortByFirstName gl@(GL [] _) = gl
+sortByFirstName (GL emps fun) = GL (sort emps) fun
+
+getCompanyTree :: String -> T.Tree Employee
+getCompanyTree str = read str
+
+main :: IO ()
+main =
+  readFile "./company.txt" >>= (\txt -> return (getCompanyTree txt)) >>=
+  (\tree -> return (maxFun tree)) >>=
+  (\bestGuestList ->
+     putStrLn (totalFunLn bestGuestList) >>
+     mapM_ putStrLn (map empName (getEmployees (sortByFirstName bestGuestList))))
