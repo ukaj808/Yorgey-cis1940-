@@ -1,3 +1,4 @@
+{-# LANGUAGE InstanceSigs #-}
 {- CIS 194 HW 10
    due Monday, 1 April
 -}
@@ -57,3 +58,11 @@ posInt = Parser f
 ------------------------------------------------------------
 -- Your code goes below here
 ------------------------------------------------------------
+first :: (a -> b) -> (a,c) -> (b,c)
+first f (x, y) = (f x, y)
+
+instance Functor Parser where
+  fmap :: (a -> b) -> Parser a -> Parser b
+  fmap f (Parser runF) = Parser runG 
+	  where runG [] = Nothing
+	        runG xs = fmap f (runF xs)
