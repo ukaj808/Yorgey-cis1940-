@@ -72,6 +72,10 @@ instance Functor Parser where
 
 instance Applicative Parser where
   pure :: a -> Parser a
-  pure = undefined
+  pure a = Parser runParserF
+    where
+      runParserF _ = Just (a, "")
   (<*>) :: Parser (a -> b) -> Parser a -> Parser b
-  (<*>) = undefined
+  (<*>) (Parser runParserG) (Parser runParserF) = runParserZ
+    where
+      runParserZ xs = (runParserG xs)
