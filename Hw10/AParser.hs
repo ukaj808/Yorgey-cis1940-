@@ -69,3 +69,9 @@ instance Functor Parser where
   fmap f (Parser runParserF) = Parser runParserG
     where
       runParserG xs = fmap (first f) (runParserF xs)
+
+instance Applicative Parser where
+  pure :: a -> Parser a
+  pure = undefined
+  (<*>) :: Parser (a -> b) -> Parser a -> Parser b
+  (<*>) = undefined
