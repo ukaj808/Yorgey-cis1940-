@@ -64,6 +64,9 @@ posInt = Parser f
 first :: (a -> b) -> (a, c) -> (b, c)
 first f (x, y) = (f x, y)
 
+second :: (a -> b) -> (c, a) -> (c, b)
+second f (x, y) = (x, f y)
+
 instance Functor Parser where
   fmap :: (a -> b) -> Parser a -> Parser b
   fmap f (Parser runParserF) = Parser runParserG
@@ -76,6 +79,14 @@ instance Applicative Parser where
     where
       runParserF _ = Just (a, "")
   (<*>) :: Parser (a -> b) -> Parser a -> Parser b
-  (<*>) (Parser runParserG) (Parser runParserF) = runParserZ
+  (<*>) p1@(Parser runParserP1) p2@(Parser runParserP2) = Parser runParserZ
     where
-      runParserZ xs = (runParserG xs)
+      runParserZ xs = runParserOnRemains (runParserP1 xs) runParserP2
+
+runParserOnRemains ::
+     Maybe (a -> b, String)
+  -> (String -> Maybe (a, String))
+  -> Maybe (b, String)
+runParserOnRemains Nothing _ = Nothing
+runParserOnRemains (Just (fn, remains)) parser =
+  fmap (first fn) (parser remains)
