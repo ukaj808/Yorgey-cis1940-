@@ -90,3 +90,32 @@ runParserOnRemains ::
 runParserOnRemains Nothing _ = Nothing
 runParserOnRemains (Just (fn, remains)) parser =
   fmap (first fn) (parser remains)
+
+type Name = String
+
+type Phone = String
+
+data Employee =
+  Emp
+    { name :: Name
+    , phone :: Phone
+    }
+  deriving (Show)
+
+parseName :: Parser Name
+parseName = Parser f
+  where
+    f [] = Nothing
+    f xs = Just (name, restOfString)
+      where
+        (name, restOfString) = span isLetter xs
+
+parsePhone :: Parser Phone
+parsePhone = Parser f
+  where
+    f [] = Nothing
+    f xs = Just (phone, restOfString)
+      where
+        (phone, restOfString) = span isDigit xs
+
+employeeParser = Emp <$> parseName <*> parsePhone
