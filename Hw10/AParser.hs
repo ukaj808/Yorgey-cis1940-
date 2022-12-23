@@ -97,8 +97,8 @@ type Phone = String
 
 data Employee =
   Emp
-    { name :: Name
-    , phone :: Phone
+    { name :: !Name
+    , phone :: !Phone
     }
   deriving (Show)
 
@@ -119,3 +119,24 @@ parsePhone = Parser f
         (phone, restOfString) = span isDigit xs
 
 employeeParser = Emp <$> parseName <*> parsePhone
+
+parseLowerA :: Parser Char
+parseLowerA = char 'a'
+
+parseLowerB :: Parser Char
+parseLowerB = char 'b'
+
+parseSpace :: Parser Char
+parseSpace = char ' '
+
+erase2 :: a -> b -> ()
+erase2 a b = ()
+
+abParser :: Parser (Char, Char)
+abParser = (,) <$> parseLowerA <*> parseLowerB
+
+abParser_ :: Parser ()
+abParser_ = erase2 <$> parseLowerA <*> parseLowerB
+
+intPair :: Parser [Integer]
+intPair = (\x _ y -> [x, y]) <$> posInt <*> parseSpace <*> posInt
