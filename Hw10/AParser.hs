@@ -79,17 +79,25 @@ instance Applicative Parser where
     where
       runParserF _ = Just (a, "")
   (<*>) :: Parser (a -> b) -> Parser a -> Parser b
-  (<*>) p1@(Parser runParserP1) p2@(Parser runParserP2) = Parser runParserZ
+  (<*>) (Parser runParserP1) (Parser runParserP2) = Parser runParserZ
     where
-      runParserZ xs = runParserOnRemains (runParserP1 xs) runParserP2
+      runParserZ xs = runParserOnRemains p1Results runParserP2
+        where
+          p1Results = runParserP1 xs
+          runParserOnRemains Nothing _ = Nothing
+          runParserOnRemains (Just (fn, remains)) parser =
+            fmap (first fn) (parser remains)
 
-runParserOnRemains ::
-     Maybe (a -> b, String)
-  -> (String -> Maybe (a, String))
-  -> Maybe (b, String)
-runParserOnRemains Nothing _ = Nothing
-runParserOnRemains (Just (fn, remains)) parser =
-  fmap (first fn) (parser remains)
+instance Alternative Parser where
+  empty :: Parser a
+  empty = Parser (const Nothing)
+  (<|>) :: Parser a -> Parser a -> Parser a
+  (<|>) (Parser runParserF) (Parser runParserG) =
+    Parser
+      (\xs ->
+         case runParserF xs of
+           Nothing -> runParserG xs
+           Just x -> runParserF xs)
 
 type Name = String
 
@@ -132,6 +140,9 @@ parseSpace = char ' '
 erase2 :: a -> b -> ()
 erase2 a b = ()
 
+erase :: a -> ()
+erase a = ()
+
 abParser :: Parser (Char, Char)
 abParser = (,) <$> parseLowerA <*> parseLowerB
 
@@ -139,4 +150,9 @@ abParser_ :: Parser ()
 abParser_ = erase2 <$> parseLowerA <*> parseLowerB
 
 intPair :: Parser [Integer]
-intPair = (\x _ y -> [x, y]) <$> posInt <*> parseSpace <*> posInt
+intPair = intPairCons <$> posInt <*> parseSpace <*> posInt
+  where
+    intPairCons x _ y = [x, y]
+
+intOrUppercase :: Parser ()
+intOrUppercase = (erase <$> posInt) <|> (erase <$> satisfy isUpper)
