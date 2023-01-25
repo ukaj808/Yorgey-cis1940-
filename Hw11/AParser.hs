@@ -156,6 +156,3 @@ intPair = intPairCons <$> posInt <*> parseSpace <*> posInt
 
 intOrUppercase :: Parser ()
 intOrUppercase = (erase <$> posInt) <|> (erase <$> satisfy isUpper)
-
-parseAorB :: Parser Char
-parseAorB = char 'A' <|> char 'B'
