@@ -3,7 +3,7 @@
 -}
 module SExpr where
 
-import AParser
+import AParserFisnik
 import Control.Applicative
 
 ------------------------------------------------------------
@@ -13,10 +13,10 @@ import Control.Applicative
 -- (:) :: a -> [a] -> [a]
 
 zeroOrMore :: Parser a -> Parser [a]
-zeroOrMore p = (:) <$> p <*> (zeroOrMore p <|> pure [])
+zeroOrMore p = oneOrMore p <|> pure []
 
 oneOrMore :: Parser a -> Parser [a]
-oneOrMore p = undefined
+oneOrMore p = (:) <$> p <*> (zeroOrMore p <|> pure [])
 
 ------------------------------------------------------------
 --  2. Utilities
