@@ -89,13 +89,3 @@ instance Applicative (State' s) where
   stf <*> st = State' runState'
     where
       runState' s = 
-
-
-
-
-
-
-
-
-
-
