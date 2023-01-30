@@ -76,16 +76,39 @@ newtype State' s a = State' { runState :: s -> (a, s) }
 
 instance Functor (State' s) where
   fmap :: (a -> b) -> State' s a -> State' s b
-  fmap f st = State' runState' 
-    where 
-      runState' s = (f $ fst newState, snd newState) 
-        where newState = runState st s
+  fmap f sa = 
+    State' $ \s -> let (a, s') = runState sa s 
+                   in (f a, s')
 
 instance Applicative (State' s) where
   pure :: a -> State' s a
   pure = undefined
 
   (<*>) :: State' s (a -> b) -> State' s a -> State' s b
-  stf <*> st = State' runState'
-    where
-      runState' s = 
+  stf <*> st = 
+    State' $ \s -> let (f,   s' ) =  runState stf s
+                       (a,   s'') =  runState st  s'
+                   in  (f a, s'') 
+
+
+instance Monad (State' s) where
+  return :: a -> State' s a
+  return = pure
+
+  (>>=) :: State' s a -> (a -> State' s b) -> State' s b
+  st >>= k = State' $ \s -> let (a, s') = runState st s
+                            in runState (k a) s' 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
