@@ -96,15 +96,35 @@ instance Monad (State' s) where
   return = pure
 
   (>>=) :: State' s a -> (a -> State' s b) -> State' s b
-  st >>= k = State' $ \s -> let (a, s') = runState st s
-                            in runState (k a) s' 
+  st >>= k = State' $ \s -> let (a, s') = runState st s in runState (k a) s' 
 
+(<=<) :: Monad m => (b -> m c) -> (a -> m b) -> (a -> m c)
+(<=<) j k = (\a -> k a >>= j)
 
+--    b  ->   m     c
+f :: Int -> Maybe String
+f x = Just $ show x
 
+--    a  ->    m    b
+g :: Bool -> Maybe Int
+g b = if b then Just 1 else Just 0
 
+--    c  ->      m    a
+h :: String -> Maybe Bool
+h s = if length s > 1 then Just True else Just False
 
-
-
+--            c
+proof1 :: Maybe String 
+proof1 = ((f <=< g) <=< h) "heyo"
+proof2 = ((\x -> g x >>= f) <=< h) "hello"
+proof3 = (\y -> h y >>= (\x -> g x >>= f)) "hello"
+proof4 = (\y -> h y >>= g >>= f) "hello"
+--            c
+proof5 :: Maybe String
+proof5 = (f <=< (g <=< h)) "hello"
+proof6 = (f <=< (\x -> h x >>= g)) "hello"
+proof7 = (\y -> (\x -> h x >>= g) y >>= f) "hello"
+proof8 = (\y -> h y >>= g >>= f) "hello"
 
 
 
