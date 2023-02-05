@@ -1,4 +1,5 @@
 module Other where
+import Text.XHtml (base)
 
 
 data Maybe' a = Just' a | Nothing'
@@ -125,6 +126,13 @@ proof5 = (f <=< (g <=< h)) "hello"
 proof6 = (f <=< (\x -> h x >>= g)) "hello"
 proof7 = (\y -> (\x -> h x >>= g) y >>= f) "hello"
 proof8 = (\y -> h y >>= g >>= f) "hello"
+
+
+monadIsFunctor :: Monad m => (a -> b) -> m a -> m b
+monadIsFunctor f m = m >>= (\a -> return $ f a)
+
+monadIsApplicative :: Monad m => m (a -> b) -> m a -> m b
+monadIsApplicative mf m = mf >>= (\f -> (m >>= (\a -> return $ f a)))   
 
 
 
