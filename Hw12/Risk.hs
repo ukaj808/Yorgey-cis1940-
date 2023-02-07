@@ -28,6 +28,7 @@ die = getRandom
 type Army    = Int
 
 data Battlefield = Battlefield { attackers :: Army, defenders :: Army }
+  deriving Show
 
 battle :: Battlefield -> Rand StdGen Battlefield
 battle bf = 
@@ -38,13 +39,15 @@ battle bf =
       dCount = defenders bf
 
       calcARolls n 
-                  | n <=  1 = 0
+                  | n <=  0 = 0
+                  | n ==  1 = 1
                   | n ==  2 = 1
                   | n ==  3 = 2
                   | n >=  4 = 3
                          
       calcDRolls n 
-                  | n <=  1 = 0
+                  | n <=  0 = 0
+                  | n ==  1 = 1
                   | n ==  2 = 1
                   | n >=  3 = 2
 
@@ -57,8 +60,13 @@ battle bf =
       dRolls    = sortBy (flip compare) (evalRand (replicateM numDRolls die) g)
       
       results   = zipWith (>) aRolls dRolls -- true is attack win, false is defense win
+      
+      countLosses result bf 
+                = if result
+                  then Battlefield (attackers bf) (defenders bf - 1)
+                  else Battlefield (attackers bf - 1) (defenders bf)
 
-      tally     = foldr (\r ac -> if r then Battlefield aCount (dCount - 1) else Battlefield (aCount - 1) dCount ) bf results
+      tally     = foldr countLosses bf results
       
    in (tally, g)
 
@@ -72,7 +80,7 @@ successProb :: Battlefield -> Rand StdGen Double
 successProb bf = replicateM 1000 (invade bf) >>= 
   \r -> 
     let calc (w, _) = w / 1000
-        tally bf (w,l) = if defenders bf == 0 
+        tally bf (w,l) = if defenders bf == 0
                          then (w+1, l) 
                          else (w, l+1)
         scorecard = foldr tally (0, 0) r
