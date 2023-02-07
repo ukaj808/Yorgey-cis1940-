@@ -30,6 +30,31 @@ type Army    = Int
 data Battlefield = Battlefield { attackers :: Army, defenders :: Army }
   deriving Show
 
+battle' :: Battlefield -> Rand StdGen Battlefield
+battle' bf = replicateM attackRolls die 
+  >>=
+  \attackRolls -> replicateM defenseRolls die 
+    >>=
+    \defenseRolls -> return (sortDesc attackRolls, sortDesc defenseRolls) 
+      >>=
+      \results -> undefined
+  where
+    attackRolls = attackers bf
+    defenseRolls = defenders bf
+    sortDesc = sortBy (flip compare)
+    calcARolls n 
+                | n <=  0 = 0
+                | n ==  1 = 1
+                | n ==  2 = 1
+                | n ==  3 = 2
+                | n >=  4 = 3
+                       
+    calcDRolls n 
+                | n <=  0 = 0
+                | n ==  1 = 1
+                | n ==  2 = 1
+                | n >=  3 = 2
+
 battle :: Battlefield -> Rand StdGen Battlefield
 battle bf = 
   liftRand $ \g -> 
@@ -75,7 +100,6 @@ invade bf = if defenders bf == 0 || attackers bf < 2
             then return bf
             else battle bf >>= invade
 
-
 successProb :: Battlefield -> Rand StdGen Double
 successProb bf = replicateM 1000 (invade bf) >>= 
   \r -> 
@@ -86,3 +110,18 @@ successProb bf = replicateM 1000 (invade bf) >>=
         scorecard = foldr tally (0, 0) r
     in return $ calc scorecard
 
+sequence :: Monad m => [m a] -> m [a]
+sequence [] = return [] 
+sequence (m:ms) = m >>= \a -> Risk.sequence ms >>= \as -> return (a:as)
+
+successProb' :: Battlefield -> Rand StdGen Double
+successProb' bf = liftRand $ 
+  \g -> 
+    let battles = replicate 1000 (evalRand (invade bf) g)
+        calc (w, _) = w / 1000
+        tally bf (w,l) = if defenders bf == 0
+                         then (w+1, l) 
+                         else (w, l+1)
+        scorecard = foldr tally (0, 0) battles
+        successRate = calc scorecard 
+    in (successRate, g)
