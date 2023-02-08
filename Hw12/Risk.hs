@@ -30,70 +30,42 @@ type Army    = Int
 data Battlefield = Battlefield { attackers :: Army, defenders :: Army }
   deriving Show
 
-battle' :: Battlefield -> Rand StdGen Battlefield
-battle' bf = replicateM attackRolls die 
+calcAttackRolls :: Int -> Int
+calcAttackRolls n 
+              | n <=  0 = 0
+              | n ==  1 = 1
+              | n ==  2 = 1
+              | n ==  3 = 2
+              | n >=  4 = 3
+
+calcDefenseRolls :: Int -> Int
+calcDefenseRolls n              
+              | n <=  0 = 0
+              | n ==  1 = 1
+              | n ==  2 = 1
+              | n >=  3 = 2
+
+battle :: Battlefield -> Rand StdGen Battlefield
+battle bf = replicateM attackRolls die 
   >>=
   \attackRolls -> replicateM defenseRolls die 
     >>=
     \defenseRolls -> return (sortDesc attackRolls, sortDesc defenseRolls) 
       >>=
-      \results -> undefined
+      \score -> return (zipWith (>) (fst score) (snd score))
+        >>=
+        \results -> return $ tally results 
+
   where
-    attackRolls = attackers bf
-    defenseRolls = defenders bf
+    attackRolls = calcAttackRolls $ attackers bf
+    defenseRolls = calcDefenseRolls $ defenders bf
     sortDesc = sortBy (flip compare)
-    calcARolls n 
-                | n <=  0 = 0
-                | n ==  1 = 1
-                | n ==  2 = 1
-                | n ==  3 = 2
-                | n >=  4 = 3
-                       
-    calcDRolls n 
-                | n <=  0 = 0
-                | n ==  1 = 1
-                | n ==  2 = 1
-                | n >=  3 = 2
+    countLosses result bf 
+              = if result
+                then Battlefield (attackers bf) (defenders bf - 1)
+                else Battlefield (attackers bf - 1) (defenders bf)
 
-battle :: Battlefield -> Rand StdGen Battlefield
-battle bf = 
-  liftRand $ \g -> 
-    let 
-      aCount = attackers bf
-
-      dCount = defenders bf
-
-      calcARolls n 
-                  | n <=  0 = 0
-                  | n ==  1 = 1
-                  | n ==  2 = 1
-                  | n ==  3 = 2
-                  | n >=  4 = 3
-                         
-      calcDRolls n 
-                  | n <=  0 = 0
-                  | n ==  1 = 1
-                  | n ==  2 = 1
-                  | n >=  3 = 2
-
-      numARolls = calcARolls aCount
-
-      numDRolls = calcDRolls dCount
-
-      aRolls    = sortBy (flip compare) (evalRand (replicateM numARolls die) g)
-
-      dRolls    = sortBy (flip compare) (evalRand (replicateM numDRolls die) g)
-      
-      results   = zipWith (>) aRolls dRolls -- true is attack win, false is defense win
-      
-      countLosses result bf 
-                = if result
-                  then Battlefield (attackers bf) (defenders bf - 1)
-                  else Battlefield (attackers bf - 1) (defenders bf)
-
-      tally     = foldr countLosses bf results
-      
-   in (tally, g)
+    tally     = foldr countLosses bf
 
 invade :: Battlefield -> Rand StdGen Battlefield
 invade bf = if defenders bf == 0 || attackers bf < 2
