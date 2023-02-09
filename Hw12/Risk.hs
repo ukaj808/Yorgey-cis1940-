@@ -9,7 +9,7 @@ import System.Posix.Signals.Exts (windowChange)
 ------------------------------------------------------------
 -- Die values
 
-newtype DieValue = DV { unDV :: Int } 
+newtype DieValue = DV { unDV :: Int }
   deriving (Eq, Ord, Show, Num)
 
 first :: (a -> b) -> (a, c) -> (b, c)
@@ -31,7 +31,7 @@ data Battlefield = Battlefield { attackers :: Army, defenders :: Army }
   deriving Show
 
 calcAttackRolls :: Int -> Int
-calcAttackRolls n 
+calcAttackRolls n
               | n <=  0 = 0
               | n ==  1 = 1
               | n ==  2 = 1
@@ -39,28 +39,24 @@ calcAttackRolls n
               | n >=  4 = 3
 
 calcDefenseRolls :: Int -> Int
-calcDefenseRolls n              
+calcDefenseRolls n
               | n <=  0 = 0
               | n ==  1 = 1
               | n ==  2 = 1
               | n >=  3 = 2
 
 battle :: Battlefield -> Rand StdGen Battlefield
-battle bf = replicateM attackRolls die 
+battle bf = replicateM attackRolls die
   >>=
-  \attackRolls -> replicateM defenseRolls die 
+  \attackRolls -> replicateM defenseRolls die
     >>=
-    \defenseRolls -> return (sortDesc attackRolls, sortDesc defenseRolls) 
-      >>=
-      \score -> return (zipWith (>) (fst score) (snd score))
-        >>=
-        \results -> return $ tally results 
+    \defenseRolls -> (return . tally) (zipWith (>) (sortDesc attackRolls) (sortDesc defenseRolls))
 
   where
     attackRolls = calcAttackRolls $ attackers bf
     defenseRolls = calcDefenseRolls $ defenders bf
     sortDesc = sortBy (flip compare)
-    countLosses result bf 
+    countLosses result bf
               = if result
                 then Battlefield (attackers bf) (defenders bf - 1)
                 else Battlefield (attackers bf - 1) (defenders bf)
@@ -73,27 +69,27 @@ invade bf = if defenders bf == 0 || attackers bf < 2
             else battle bf >>= invade
 
 successProb :: Battlefield -> Rand StdGen Double
-successProb bf = replicateM 1000 (invade bf) >>= 
-  \r -> 
+successProb bf = replicateM 1000 (invade bf) >>=
+  \r ->
     let calc (w, _) = w / 1000
         tally bf (w,l) = if defenders bf == 0
-                         then (w+1, l) 
+                         then (w+1, l)
                          else (w, l+1)
         scorecard = foldr tally (0, 0) r
     in return $ calc scorecard
 
 sequence :: Monad m => [m a] -> m [a]
-sequence [] = return [] 
+sequence [] = return []
 sequence (m:ms) = m >>= \a -> Risk.sequence ms >>= \as -> return (a:as)
 
 successProb' :: Battlefield -> Rand StdGen Double
-successProb' bf = liftRand $ 
-  \g -> 
+successProb' bf = liftRand $
+  \g ->
     let battles = replicate 1000 (evalRand (invade bf) g)
         calc (w, _) = w / 1000
         tally bf (w,l) = if defenders bf == 0
-                         then (w+1, l) 
+                         then (w+1, l)
                          else (w, l+1)
         scorecard = foldr tally (0, 0) battles
-        successRate = calc scorecard 
+        successRate = calc scorecard
     in (successRate, g)
